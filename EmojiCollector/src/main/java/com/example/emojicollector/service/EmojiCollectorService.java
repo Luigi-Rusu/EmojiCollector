@@ -2,21 +2,17 @@ package com.example.emojicollector.service;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.springframework.http.HttpEntity;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import com.example.emojicollector.dto.EmojiDto;
 import com.example.emojicollector.dto.EmojiDtoToClient;
 import com.example.emojicollector.errors.EmojiNotFoundException;
 import com.example.emojicollector.errors.ErrorMessages;
 import com.example.emojicollector.errors.FieldInvalidException;
+import com.example.emojicollector.feign.EmojiCollectorFeign;
 import com.example.emojicollector.model.Emoji;
 import com.example.emojicollector.repository.EmojiCollectorRepository;
 
@@ -24,25 +20,15 @@ import com.example.emojicollector.repository.EmojiCollectorRepository;
 public class EmojiCollectorService {
 
 	EmojiCollectorRepository emojiCollectorRepository;
+	EmojiCollectorFeign emojiCollectorFeign;
 
-	EmojiCollectorService(EmojiCollectorRepository emojiCollectorRepository){
+	EmojiCollectorService(EmojiCollectorRepository emojiCollectorRepository, EmojiCollectorFeign emojiCollectorFeign){
 		this.emojiCollectorRepository = emojiCollectorRepository;
+		this.emojiCollectorFeign = emojiCollectorFeign;
 	}
 
 	public List<Emoji> getEmojiFromProvider() {
-		CompletableFuture<List<EmojiDto>> cf =  WebClient.create("http://localhost:9090/api/provider")
-				.get()
-				.accept(MediaType.APPLICATION_JSON)
-				.retrieve()
-				.toEntityList(EmojiDto.class)
-				.mapNotNull(HttpEntity::getBody)
-				.toFuture();
-
-		try {
-			return cf.get().stream().map(EmojiDto::convertDtoToEmoji).collect(Collectors.toList());
-		} catch (InterruptedException | ExecutionException e) {
-			throw new RuntimeException(e);
-		}
+		return emojiCollectorFeign.getEmojiFromProvider().stream().map(EmojiDto::convertDtoToEmoji).collect(Collectors.toList());
 	}
 
 	public long saveAllEmojiToDB()  {

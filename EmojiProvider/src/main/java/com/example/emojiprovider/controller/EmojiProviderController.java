@@ -7,21 +7,21 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.emojiprovider.dto.EmojiDto;
-import com.example.emojiprovider.service.EmojiProviderService;
+import com.example.emojiprovider.feign.EmojiProviderFeign;
 
 @RestController
 @RequestMapping("/api/provider")
 public class EmojiProviderController {
 
-	EmojiProviderService emojiProviderService;
+	EmojiProviderFeign emojiProviderFeign;
 
-	EmojiProviderController(EmojiProviderService emojiProviderService) {
-		this.emojiProviderService = emojiProviderService;
+	EmojiProviderController(EmojiProviderFeign emojiProviderFeign) {
+		this.emojiProviderFeign = emojiProviderFeign;
 	}
 
 	@GetMapping
 	public List<EmojiDto> getEmojiFromApi(){
-		return emojiProviderService.getEmojiFromApi();
+		return emojiProviderFeign.getEmojiFromApi();
 	}
 
 }
